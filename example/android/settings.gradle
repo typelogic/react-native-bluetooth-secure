@@ -1,0 +1,6 @@
+rootProject.name = 'BluetoothSecureExample'
+apply from: file("../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesSettingsGradle(settings)
+include ':app'
+
+include ':reactnativebluetoothsecure'
+project(':reactnativebluetoothsecure').projectDir = new File(rootProject.projectDir, '../../android')
