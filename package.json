@@ -1,6 +1,6 @@
 {
   "name": "react-native-bluetooth-secure",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Bluetooth Communication with Authenticated Encryption",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -33,7 +33,6 @@
   },
   "keywords": [
     "react-native",
-    "ios",
     "android"
   ],
   "repository": "https://github.com/typelogic/react-native-bluetooth-secure",

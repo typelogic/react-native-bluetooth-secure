@@ -1,6 +1,6 @@
 # react-native-bluetooth-secure
 
-Secure Bluetooth Communication with Authenticated Encryption. The **iOS** is still in progress.
+Secure Bluetooth Communication with Authenticated Encryption. This secure Bluetooth communication does not need pairing. The **iOS** is still in progress. 
 
 ## Installation
 
@@ -20,8 +20,9 @@ For the receiving side:
 var params = JSON.parse(BluetoothApi.getConnectionParameters())
 console.log(params)
 
-// Use any QR code generator library to display **params** json string as a QR code, and then enter 
-// into advertising mode
+// Use any out-of-band mechanism to communicate the value of params to the transmitting device.
+// For example, you can use a QR code generator library to display params by line of sight.
+// Or the two communicating parties already have a pre-shared value of params.
 
 BluetoothApi.receive(params.cid, (decryptedMsg) => {
   console.log(decryptedMsg)
@@ -31,8 +32,9 @@ BluetoothApi.receive(params.cid, (decryptedMsg) => {
 For the transmitting side:
 
 ```js
-// Use any QR code scanning library to scan the QR code of the receiver. And then enter into
-// discovery mode
+// Use any out-of-band mechanism to get the value of params of the receiving device.
+// For example, you can use a QR code scanning library to scan the QR code if the receiver is using QR code to communicate this value.
+// Or the two communicating parties already have a pre-shared value of params.
 
 var msg = "Hello, World!"
 
@@ -44,7 +46,7 @@ BluetoothApi.discover(params.cid, (x) => {
 })
 ```
 
-This library currently uses a QR code for [cryptographic](https://doc.libsodium.org/) public key exchange and secures the payload with [Authenticated Encryption](https://en.wikipedia.org/wiki/Authenticated_encryption). All keys are ephemeral per QR code.
+This secure Bluetooth communication library needs to be used with another mechanism, for example a QR code, for the [cryptographic](https://doc.libsodium.org/) public key exchange. The public key is used to secure the payload with [Authenticated Encryption](https://en.wikipedia.org/wiki/Authenticated_encryption). 
 
 ## Contributing
 
