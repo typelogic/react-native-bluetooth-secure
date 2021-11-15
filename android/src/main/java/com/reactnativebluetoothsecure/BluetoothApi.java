@@ -16,12 +16,13 @@
 
 package com.reactnativebluetoothsecure;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReactApplicationContext;
-import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.WritableMap;
@@ -29,6 +30,10 @@ import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.facebook.react.bridge.Callback;
 
 import org.idpass.smartshare.bluetooth.BluetoothSecure;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.Iterator;
 
 public class BluetoothApi extends ReactContextBaseJavaModule {
 
@@ -46,56 +51,82 @@ public class BluetoothApi extends ReactContextBaseJavaModule {
         return "BluetoothApi";
     }
 
-    private void sendEvent(ReactContext reactContext, String eventName, @Nullable WritableMap params) {
-        reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-            .emit(eventName, params);
+    private void emitEvent(String eventName, @Nullable WritableMap data) {
+        getReactApplicationContext()
+            .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+            .emit(eventName, data);
     }
 
-    private void console_log(String msg) {
-        WritableMap params = Arguments.createMap();
-        params.putString("what", msg);
-        sendEvent(getReactApplicationContext(), "TRACELOG", params);
+    private void emitEventLog(String log) {
+        WritableMap data = Arguments.createMap();
+        data.putString("log", log);
+        emitEvent("EVENT_LOG", data);
+    }
+
+    private void emitEventNearby(String msg) {
+        try {
+            WritableMap data = Arguments.createMap();
+            JSONObject json = new JSONObject(msg);
+            Iterator<String> keys = json.keys();
+            while (keys.hasNext()) {
+                String key = keys.next();
+                String value = json.getString(key);
+                data.putString(key, value);
+            }
+            emitEvent("EVENT_NEARBY", data);
+        } catch (JSONException e) {
+            emitEventLog(e.getMessage());
+        }
     }
 
     private void init() {
-        Utils.checkPermissions(getCurrentActivity());
-        bluetoothSecure.init(getCurrentActivity(), (logmsg) -> {
-            console_log(logmsg);
+        bluetoothSecure.init(getCurrentActivity(),
+            (log) -> {
+                emitEventLog(log);
+            }, (msg) -> {
+                emitEventNearby(msg);
         });
     }
 
       ///////////////////////////////////
      // BluetoothApi.tsx Javascript APIs
     ///////////////////////////////////
-    @ReactMethod
-    public void transmit(String message, String pubkey, Callback callback) {
-        bluetoothSecure.transmit(message, pubkey, () -> {
-            callback.invoke("*** TXRX_SUCCESS ***");
-        });
-    }
-
-    @ReactMethod
-    public void discover(String connectionId, Callback callback) {
-        init();
-        console_log("startDiscovery:"+connectionId);
-        bluetoothSecure.discover(connectionId, () -> {
-            callback.invoke("connection established");
-        });
-    }
-
-    @ReactMethod
-    public void receive(String connectionId, Callback callback) {
-        init();
-        console_log("startAdvertising:"+connectionId);
-
-        bluetoothSecure.receive(connectionId, (m) -> {
-            callback.invoke(m);
-        });
-    }
 
     @ReactMethod(isBlockingSynchronousMethod = true)
     public String getConnectionParameters() {
         String params = bluetoothSecure.getConnectionParameters();
         return params;
+    }
+
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    public void setConnectionParameters(String params) {
+        Log.d(TAG, "****** setConnectionParameters: " + params);
+        bluetoothSecure.setConnectionParameters(params);
+    }
+
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    public String getConnectionParametersDebug() {
+        String params = bluetoothSecure.getConnectionParametersDebug();
+        return params;
+    }
+
+    @ReactMethod
+    public void createConnection(String mode, Callback callback) {
+        init();
+        bluetoothSecure.createConnection(mode, () -> {
+            callback.invoke();
+        });
+    }
+
+    @ReactMethod
+    public void send(String msg, Callback callback) {
+        bluetoothSecure.send(msg, () -> {
+            callback.invoke();
+        });
+    }
+
+    @ReactMethod
+    public void destroyConnection() {
+        bluetoothSecure.destroyConnection();
     }
 }

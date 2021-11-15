@@ -1,57 +1,90 @@
-# react-native-bluetooth-secure
+## Description
+Secure pairless Bluetooth transport layer with Authenticated Encryption. 
 
-Secure Bluetooth Communication with Authenticated Encryption. This secure Bluetooth communication does not need pairing. The **iOS** is still in progress. 
+## Installatioon
 
-## Installation
-
-```sh
-npm install react-native-bluetooth-secure
+```
+npm install --save react-native-bluetooth-secure
 ```
 
-## Usage
+In your main `App.tsx` file:
 
-```js
-import BluetoothApi from "react-native-bluetooth-secure";
+```javascript
+import BluetoothApi from "react-native-bluetooth-secure"
 ```
 
-For the receiving side:
+## API Description
 
-```js
-var params = JSON.parse(BluetoothApi.getConnectionParameters())
+The app that *displays the QR code* shall generate the ephemeral connection parameters:
+
+```javascript
+var params = BluetoothApi.getConnectionParameters()
 console.log(params)
 
-// Use any out-of-band mechanism to communicate the value of params to the transmitting device.
-// For example, you can use a QR code generator library to display params by line of sight.
+// Use any out-of-band mechanism to communicate the value of params to the other device.
+// For example, you can use a QR code generator library to display params.
 // Or the two communicating parties already have a pre-shared value of params.
+```
+The `params` looks like:
 
-BluetoothApi.receive(params.cid, (decryptedMsg) => {
-  console.log(decryptedMsg)
-})
+```javascript
+{
+  "cid": "1ejpu",
+  "pk": "819176777955C098B78BAF949084A4484AEC5A769CED2307D59E46DC85A0F758"
+}
 ```
 
-For the transmitting side:
+The app that *scans the QR code* shall set its connection parameters:
 
-```js
-// Use any out-of-band mechanism to get the value of params of the receiving device.
+```javascript
+// Use any out-of-band mechanism to get the value of params of the other device.
 // For example, you can use a QR code scanning library to scan the QR code if the receiver is using QR code to communicate this value.
 // Or the two communicating parties already have a pre-shared value of params.
 
-var msg = "Hello, World!"
+BluetoothApi.setConnectionParameters(params)
+```
 
-BluetoothApi.discover(params.cid, (x) => {
-  // Encrypt and transmit msg
-  BluetoothApi.transmit(msg, params.pk, (x) => {
-      console.log("the message has been transmitted")
-  })
+Both apps shall setup the connection:
+
+```javascript
+BluetoothApi.createConnection("dual", () => {
+  // A secure Bluetooth connection is created
+  // Anytime, either app may call BluetoothApi.send()
 })
 ```
 
-This secure Bluetooth communication library needs to be used with another mechanism, for example a QR code, for the [cryptographic](https://doc.libsodium.org/) public key exchange. The public key is used to secure the payload with [Authenticated Encryption](https://en.wikipedia.org/wiki/Authenticated_encryption). 
+Once the connection is created, either app can send a string message. 
 
-## Contributing
+```javascript
+BluetoothApi.send(msg, () => {
+  // message sent
+})
+```
 
-See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the repository and the development workflow.
+The app can intentionally tear down the connection. 
 
-## License
+```javascript
+BluetoothApi.destroyConnection()
+```
 
-MIT
+The app must subscribe to **EVENT_NEARBY** event in order to receive messages, transfer status of incoming/outgoing messages, or connection related events:
+
+```javascript
+BluetoothApi.subscribeEvent('EVENT_NEARBY', (event) => {
+  switch (event.type) {
+    case "msg":
+    console.log(event.data);
+    break;
+    
+    case "transferupdate": // both transmitter/receiver gets this update
+    // event.data can be either: SUCCESS, IN_PROGRESS, CANCELED, FAILURE
+    break;
+
+    // The other app has shutdown or clicked the disconnect button
+    case "onDisconnected": 
+    break;
+  }
+})
+```
+
+This secure Bluetooth communication library needs to be used with another mechanism, for example a QR code, for the [cryptographic](https://doc.libsodium.org/) public key exchange. The public key is used to secure the payload with [Authenticated Encryption](https://en.wikipedia.org/wiki/Authenticated_encryption).
