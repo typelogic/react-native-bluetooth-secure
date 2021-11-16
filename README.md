@@ -73,23 +73,41 @@ The app can intentionally tear down the connection.
 BluetoothApi.destroyConnection()
 ```
 
-The app must subscribe to **EVENT_NEARBY** event in order to receive messages, transfer status of incoming/outgoing messages, or connection related events:
+The app must handle *Nearby* events in order to receive **messages**, to monitor transfer **status** of incoming/outgoing messages, or to monitor connection related **events**:
 
 ```javascript
-BluetoothApi.subscribeEvent('EVENT_NEARBY', (event) => {
-  switch (event.type) {
+BluetoothApi.handleNearbyEvents((event) => {
+    console.log(event.type)
+    switch (event.type) {
     case "msg":
-    console.log(event.data);
-    break;
-    
-    case "transferupdate": // both transmitter/receiver gets this update
-    // event.data can be either: SUCCESS, IN_PROGRESS, CANCELED, FAILURE
+    this.setState({
+      msg: event.data,
+    });
     break;
 
-    // The other app has shutdown or clicked the disconnect button
-    case "onDisconnected": 
+    case "onDisconnected":
+    console.log("onDisconnected:" + event.data)
+    this.setState({
+      msg: "",
+    });
+    break;
+
+    case "transferupdate":
+    console.log("transferupdate:" + event.data)
+    break;
+
+    default:
     break;
   }
+
+})
+```
+
+The app can print native debug **logs** by:
+
+```javascript
+BluetoothApi.handleLogEvents((event) => {
+  console.log(event.log)
 })
 ```
 

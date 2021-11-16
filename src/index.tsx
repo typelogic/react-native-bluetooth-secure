@@ -33,16 +33,20 @@ const BluetoothApi = NativeModules.BluetoothApi
       }
     );
 
+interface HandlerFunc {
+  (message: string): void;
+}
+
 const eventEmitter = new NativeEventEmitter();
 
-BluetoothApi.handleNearbyEvents = (callback) => {
+BluetoothApi.handleNearbyEvents = (callback :HandlerFunc) => {
   var eventObj = eventEmitter.addListener('EVENT_NEARBY', (event) => {
     callback(event)
   })
   return eventObj
 }
 
-BluetoothApi.handleLogEvents = (callback) => {
+BluetoothApi.handleLogEvents = (callback :HandlerFunc) => {
   var eventObj = eventEmitter.addListener('EVENT_LOG', (event) => {
     callback(event)
   })
