@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { NativeModules, Platform } from 'react-native';
+import { NativeModules, Platform, NativeEventEmitter } from 'react-native';
 
 const LINKING_ERROR =
   `The package 'react-native-bluetooth-secure' doesn't seem to be linked. Make sure: \n\n` +
@@ -32,5 +32,21 @@ const BluetoothApi = NativeModules.BluetoothApi
         },
       }
     );
+
+const eventEmitter = new NativeEventEmitter();
+
+BluetoothApi.handleNearbyEvents = (callback) => {
+  var eventObj = eventEmitter.addListener('EVENT_NEARBY', (event) => {
+    callback(event)
+  })
+  return eventObj
+}
+
+BluetoothApi.handleLogEvents = (callback) => {
+  var eventObj = eventEmitter.addListener('EVENT_LOG', (event) => {
+    callback(event)
+  })
+  return eventObj 
+}
 
 export default BluetoothApi;
