@@ -5,8 +5,6 @@ A secure & pairless Bluetooth transport layer with Authenticated Encryption.
 
 [SecureSend](https://github.com/typelogic/securesend) is a test React Native application that uses this library.
 
-The Android permissions is not handled in the library. This example [MainActivity.java](https://gist.github.com/9e3231e4513a9896c163173062720bd0) works for Android10 but not Android11. 
-
 ## Installation
 
 ```
