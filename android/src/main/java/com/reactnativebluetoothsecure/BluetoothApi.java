@@ -29,7 +29,7 @@ import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.facebook.react.bridge.Callback;
 
-import org.idpass.smartshare.bluetooth.BluetoothSecure;
+import org.idpass.smartshare.connection.BluetoothSecure;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -111,21 +111,30 @@ public class BluetoothApi extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void createConnection(String mode, Callback callback) {
+    public void createConnection(String modeStr, Callback callback) {
         init();
-        bluetoothSecure.createConnection(mode, () -> {
-            callback.invoke();
+        BluetoothSecure.Mode mode = BluetoothSecure.Mode.valueOf(modeStr);
+        bluetoothSecure.createConnection(mode, (event, info) -> {
+            switch (event) {
+                case ONCONNECTIONRESULT_SUCCESS:
+                callback.invoke();
+                break;
+            }
         });
     }
 
-    @ReactMethod
+  @ReactMethod
     public void send(String msg, Callback callback) {
-        bluetoothSecure.send(msg, () -> {
-            callback.invoke();
+        bluetoothSecure.send(msg, (event, info) -> {
+            switch (event) {
+                case ONSENT:
+                callback.invoke();
+                break;
+            }
         });
     }
 
-    @ReactMethod
+    @ReactMethod(isBlockingSynchronousMethod = true)
     public void destroyConnection() {
         bluetoothSecure.destroyConnection();
     }
